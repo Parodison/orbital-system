@@ -2,12 +2,14 @@ package com.parodison.orbital.system.pages
 
 import androidx.compose.runtime.*
 import com.parodison.orbital.system.components.dom.AnimatedVisibility
+import com.parodison.orbital.system.components.layouts.LocalWindowSize
+import com.parodison.orbital.system.components.layouts.WindowSizeClass
 import com.parodison.orbital.system.components.satellite.SatelliteListScreen
 import com.parodison.orbital.system.components.satellite.SatelliteResume
 import com.parodison.orbital.system.controllers.SatelliteTrackerController
-import com.parodison.orbital.system.models.OrbitData
-import com.parodison.orbital.system.models.toSatellite
 import com.parodison.sgp4.Satellite
+import com.parodison.sgp4.model.OrbitData
+import com.parodison.sgp4.model.toSatellite
 import com.varabyte.kobweb.compose.foundation.layout.Arrangement
 import com.varabyte.kobweb.compose.foundation.layout.Row
 import com.varabyte.kobweb.compose.ui.Modifier
@@ -16,13 +18,13 @@ import com.varabyte.kobweb.compose.ui.modifiers.fillMaxWidth
 import com.varabyte.kobweb.compose.ui.modifiers.padding
 import com.varabyte.kobweb.core.Page
 import com.varabyte.kobweb.core.layout.Layout
-import kotlinx.browser.window
+import org.jetbrains.compose.web.css.ms
 import org.jetbrains.compose.web.css.percent
 import org.jetbrains.compose.web.css.px
 import org.koin.compose.koinInject
 
 data class SatelliteScreenActions(
-    val onSatelliteSelected: (OrbitData) -> Unit,
+    val onSatelliteSelected: (Satellite) -> Unit,
     val onSatelliteResumeRequested: (OrbitData) -> Unit,
 )
 
@@ -40,20 +42,27 @@ fun HomePage() {
 
 
     val satelliteScreenActions = SatelliteScreenActions(
-        onSatelliteSelected = {}, 
+        onSatelliteSelected = {
+            satelliteController.addSatelliteToFavorites(it)
+        },
         onSatelliteResumeRequested = {
             satelliteController.updateSelectedSatellite(it.toSatellite())
         },
     )
+    val isMobile = LocalWindowSize.current.sizeClass == WindowSizeClass.Mobile
+
     CompositionLocalProvider(LocalSatelliteScreenActions provides satelliteScreenActions) {
         Row(
-            Modifier.fillMaxSize().padding(right = 20.px),
+            Modifier
+                .fillMaxSize()
+                .padding(right = 20.px),
             horizontalArrangement = Arrangement.spacedBy(10.px),
         ) {
             SatelliteListScreen()
             AnimatedVisibility(
                 modifier = Modifier.fillMaxWidth(90.percent),
                 visible = satelliteSelectedForResume != null,
+                durationMs = 300.ms
             ) {
                 satelliteSelectedForResume?.let { satelliteResume ->
                     SatelliteResume(satelliteResume)

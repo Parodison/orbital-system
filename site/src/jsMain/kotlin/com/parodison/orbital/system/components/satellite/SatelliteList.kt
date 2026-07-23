@@ -2,11 +2,13 @@ package com.parodison.orbital.system.components.satellite
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import com.parodison.orbital.system.controllers.SatelliteTrackerController
-import com.parodison.orbital.system.models.OrbitData
 import com.parodison.orbital.system.pages.LocalSatelliteScreenActions
+import com.parodison.sgp4.Satellite
 import com.varabyte.kobweb.compose.foundation.layout.Arrangement
 import com.varabyte.kobweb.compose.foundation.layout.Column
 import com.varabyte.kobweb.compose.foundation.layout.Row
@@ -21,11 +23,12 @@ import org.koin.compose.koinInject
 @Composable
 fun SatelliteListComponent(
     modifier: Modifier = Modifier,
-    satelliteList: List<OrbitData>
+    satelliteList: List<Satellite>
 ) {
     val satelliteScreenActions = LocalSatelliteScreenActions.current
     val satelliteTrackerController: SatelliteTrackerController = koinInject()
     val selectedSatellite by satelliteTrackerController.selectedSatellite.collectAsState()
+    val favoritesSatellites by satelliteTrackerController.favoritesSatellites.collectAsState()
 
     Column(
         modifier = modifier,
@@ -43,12 +46,16 @@ fun SatelliteListComponent(
             verticalArrangement = Arrangement.spacedBy(10.px),
         ) {
             satelliteList.forEach { data ->
-                val isSelected = selectedSatellite?.noradCatId == data.noradCatId
+                val isSelected = selectedSatellite?.orbitData?.noradCatId == data.orbitData.noradCatId
+                val isInFavoritedList by remember(favoritesSatellites, data) {
+                    derivedStateOf { favoritesSatellites.contains(data) }
+                }
 
                 SatelliteCard(
                     modifier = Modifier.fillMaxWidth(),
                     data = data,
                     selected = isSelected,
+                    favorite = isInFavoritedList,
                     onSatelliteSelected = {
                         satelliteScreenActions.onSatelliteSelected(it)
                     },

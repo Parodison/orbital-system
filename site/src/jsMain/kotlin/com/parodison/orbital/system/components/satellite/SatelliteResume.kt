@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
 import com.parodison.orbital.system.components.MetaDataItem
 import com.parodison.orbital.system.components.maplibre.AnimatedLine
 import com.parodison.orbital.system.components.maplibre.Line
@@ -11,6 +12,7 @@ import com.parodison.orbital.system.components.maplibre.MapLibreMap
 import com.parodison.orbital.system.components.maplibre.Marker
 import com.parodison.orbital.system.components.maplibre.Polygon
 import com.parodison.orbital.system.components.maplibre.rememberMapLibreState
+import com.parodison.orbital.system.controllers.SatelliteTrackerController
 import com.parodison.orbital.system.core.AppColors
 import com.parodison.orbital.system.core.lngLatArray
 import com.parodison.orbital.system.core.mapOptions
@@ -26,12 +28,15 @@ import com.varabyte.kobweb.compose.ui.Alignment
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Colors
 import com.varabyte.kobweb.compose.ui.modifiers.*
+import com.varabyte.kobweb.silk.components.icons.mdi.MdiClose
 import com.varabyte.kobweb.silk.components.icons.mdi.MdiSatelliteAlt
 import com.varabyte.kobweb.silk.components.icons.mdi.MdiStar
 import com.varabyte.kobweb.silk.components.text.SpanText
+import com.varabyte.kobweb.silk.style.toModifier
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.web.css.LineStyle
 import org.jetbrains.compose.web.css.px
+import org.koin.compose.koinInject
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
@@ -40,6 +45,7 @@ import kotlin.time.Instant
 
 @Composable
 fun SatelliteResume(satellite: Satellite) {
+    val satelliteTrackerController: SatelliteTrackerController = koinInject()
 
     Column(
         Modifier.fillMaxWidth()
@@ -50,7 +56,12 @@ fun SatelliteResume(satellite: Satellite) {
             .padding(15.px),
         verticalArrangement = Arrangement.spacedBy(10.px),
     ) {
-        SatelliteResumeHeader(satellite)
+        SatelliteResumeHeader(
+            satellite,
+            onCloseRequested = {
+                satelliteTrackerController.clearSelectedSatellite()
+            }
+        )
         ActualLocationComponent(satellite)
     }
 }
@@ -59,6 +70,7 @@ fun SatelliteResume(satellite: Satellite) {
 @Composable
 private fun ColumnScope.SatelliteResumeHeader(
     satellite: Satellite,
+    onCloseRequested: () -> Unit,
 ) {
 
     Row(
@@ -79,13 +91,13 @@ private fun ColumnScope.SatelliteResumeHeader(
                 verticalArrangement = Arrangement.spacedBy(10.px)
             ) {
                 SpanText(
-                    satellite.objectName,
+                    satellite.orbitData.objectName,
                     modifier = Modifier
                         .fontWeight(600)
                         .fontSize(20.px)
                 )
                 SpanText(
-                    "NORAD ID: ${satellite.noradCatId}",
+                    "NORAD ID: ${satellite.orbitData.noradCatId}",
                     modifier = Modifier
                         .fontWeight(500)
                         .fontSize(12.px)
@@ -98,6 +110,11 @@ private fun ColumnScope.SatelliteResumeHeader(
             horizontalArrangement = Arrangement.spacedBy(10.px)
         ) {
             MdiStar()
+            MdiClose(
+                modifier = IconHoverStyle.toModifier()
+                    .color(Colors.White)
+                    .onClick { onCloseRequested() },
+            )
         }
     }
 }
@@ -197,7 +214,7 @@ private fun ColumnScope.ActualLocationComponent(satellite: Satellite) {
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     MdiSatelliteAlt()
-                                    SpanText(satellite.objectName, modifier = Modifier)
+                                    SpanText(satellite.orbitData.objectName, modifier = Modifier)
                                 }
                             }
                         }

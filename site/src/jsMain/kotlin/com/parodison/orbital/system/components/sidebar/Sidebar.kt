@@ -44,7 +44,7 @@ fun RowScope.Sidebar(context: PageContext, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier
             .backgroundColor(AppColors.DarkBluePrimary)
-            .overflow(Overflow.Hidden)
+            .overflow(Overflow.Scroll)
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(10.px),

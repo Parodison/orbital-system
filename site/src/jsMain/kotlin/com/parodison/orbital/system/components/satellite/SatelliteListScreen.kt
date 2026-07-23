@@ -9,7 +9,6 @@ import androidx.compose.runtime.setValue
 import com.parodison.orbital.system.components.dom.SearchInput
 import com.parodison.orbital.system.controllers.SatelliteListState
 import com.parodison.orbital.system.controllers.SatelliteTrackerController
-import com.parodison.orbital.system.models.OrbitData
 import com.varabyte.kobweb.compose.css.BoxSizing
 import com.varabyte.kobweb.compose.css.FontSize
 import com.varabyte.kobweb.compose.css.FontWeight

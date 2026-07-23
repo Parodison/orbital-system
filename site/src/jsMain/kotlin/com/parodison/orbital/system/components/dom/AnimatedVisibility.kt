@@ -6,13 +6,26 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.varabyte.kobweb.compose.css.Overflow
+import com.varabyte.kobweb.compose.css.Transition
+import com.varabyte.kobweb.compose.css.WhiteSpace
 import com.varabyte.kobweb.compose.foundation.layout.Box
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.modifiers.onTransitionEnd
 import com.varabyte.kobweb.compose.ui.modifiers.opacity
+import com.varabyte.kobweb.compose.ui.modifiers.overflow
+import com.varabyte.kobweb.compose.ui.modifiers.textWrap
 import com.varabyte.kobweb.compose.ui.modifiers.transition
 import com.varabyte.kobweb.compose.ui.modifiers.translateY
+import com.varabyte.kobweb.compose.ui.modifiers.whiteSpace
+import com.varabyte.kobweb.compose.ui.modifiers.width
+import com.varabyte.kobweb.silk.style.CssStyle
+import com.varabyte.kobweb.silk.style.selectors.hover
 import kotlinx.browser.window
+import org.jetbrains.compose.web.css.AnimationTimingFunction
+import org.jetbrains.compose.web.css.CSSSizeValue
+import org.jetbrains.compose.web.css.CSSUnit
+import org.jetbrains.compose.web.css.mm
 import org.jetbrains.compose.web.css.ms
 import org.jetbrains.compose.web.css.px
 
@@ -28,36 +41,41 @@ import org.jetbrains.compose.web.css.px
 fun AnimatedVisibility(
     visible: Boolean,
     modifier: Modifier = Modifier,
-    durationMs: Int = 200,
-    slideDistancePx: Int = -8,
+    durationMs: CSSSizeValue<CSSUnit.ms> = 200.ms,
     content: @Composable () -> Unit,
 ) {
-    var mounted by remember { mutableStateOf(visible) }
-    var animatedIn by remember { mutableStateOf(visible) }
+    var mounted by remember { mutableStateOf(false) }
 
     LaunchedEffect(visible) {
-        if (visible) {
-            mounted = true
-            window.requestAnimationFrame { animatedIn = true }
-        } else {
-            animatedIn = false
-        }
+        mounted = visible
     }
 
-    if (mounted) {
-        Box(
-            modifier
-                .opacity(if (animatedIn) 1.0 else 0.0)
-                .translateY(if (animatedIn) 0.px else slideDistancePx.px)
-                .transition {
-                    property("opacity", "transform")
-                    duration(durationMs.ms)
-                }
-                .onTransitionEnd {
-                    if (!animatedIn) mounted = false
-                }
-        ) {
+
+    Box(
+        modifier = Modifier
+            .width(0.px)
+            .opacity(0)
+            .whiteSpace(WhiteSpace.NoWrap)
+            .transition {
+                property("width")
+                duration(durationMs)
+                timingFunction(AnimationTimingFunction("cubic-bezier(0.4, 0, 0.2, 1)"))
+            }
+            .then(if (visible) modifier.opacity(1) else Modifier)
+    ) {
+        if (mounted) {
             content()
         }
     }
+}
+
+val AnimatedVisibilityStyle = CssStyle {
+    base {
+        Modifier
+            .width(0.px)
+            .opacity(0)
+            .overflow(Overflow.Hidden)
+            .whiteSpace(WhiteSpace.NoWrap)
+    }
+
 }

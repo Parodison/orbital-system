@@ -1,7 +1,8 @@
 package com.parodison.orbital.system.controllers
 
-import com.parodison.orbital.system.models.OrbitData
 import com.parodison.sgp4.Satellite
+import com.parodison.sgp4.model.OrbitData
+import com.parodison.sgp4.model.toSatellite
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
@@ -14,13 +15,14 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 sealed class SatelliteListState {
     object Idle : SatelliteListState()
     object Loading : SatelliteListState()
-    data class Success(val data: List<OrbitData>) : SatelliteListState()
+    data class Success(val data: List<Satellite>) : SatelliteListState()
     data class Error(val message: String) : SatelliteListState()
 }
 
@@ -34,13 +36,27 @@ class SatelliteTrackerController(
     private val _selectedSatellite = MutableStateFlow<Satellite?>(null)
     val selectedSatellite = _selectedSatellite.asStateFlow()
 
+    private val _favoritesSatellites = MutableStateFlow<List<Satellite>>(emptyList())
+    val favoritesSatellites = _favoritesSatellites.asStateFlow()
+
     init {
         """if (_satelliteListState.value is SatelliteListState.Idle) {
             loadSatelliteList()
         }"""
+        val data = Json.decodeFromString<List<OrbitData>>(orbitDataJsonList)
         _satelliteListState.value = SatelliteListState.Success(
-            data = Json.decodeFromString<List<OrbitData>>(satelliteJsonList)
+            data = data.map { it.toSatellite() }
         )
+    }
+
+    fun addSatelliteToFavorites(satellite: Satellite) {
+        _favoritesSatellites.update { currentList ->
+            if (satellite in currentList) {
+                currentList - satellite
+            } else {
+                currentList + satellite
+            }
+        }
     }
 
     fun updateSelectedSatellite(data: Satellite) {
@@ -62,7 +78,7 @@ class SatelliteTrackerController(
                 }
                 if (response.status.isSuccess()) {
                     val data = response.body<List<OrbitData>>()
-                    _satelliteListState.value = SatelliteListState.Success(data)
+                    _satelliteListState.value = SatelliteListState.Success(data.map { it.toSatellite() })
                 } else {
                     val error = response.bodyAsText()
                     println(error)
@@ -86,17 +102,17 @@ class SatelliteTrackerController(
     fun resetSatelliteList() {
         _satelliteListState.value = SatelliteListState.Idle
     }
-    fun findOrbitDataByNoradId(noradId: Long): OrbitData? {
+    fun findSatelliteByNoradId(noradId: Long): Satellite? {
         val state = satelliteListState.value
         return if (state is SatelliteListState.Success) {
-            state.data.find { it.noradCatId == noradId }
+            state.data.find { it.orbitData.noradCatId == noradId }
         } else {
             null
         }
     }
 }
 
-val satelliteJsonList = """
+val orbitDataJsonList = """
     [
       {
         "OBJECT_NAME": "ISS (ZARYA)",

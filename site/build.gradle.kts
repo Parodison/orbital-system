@@ -24,6 +24,10 @@ kobweb {
                     href = "https://unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css"
                     rel = "stylesheet"
                 }
+                link {
+                    href = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
+                    rel = "stylesheet"
+                }
             }
         }
     }
@@ -72,6 +76,7 @@ kotlin {
             implementation(libs.kobwebx.serialization.kotlinx)
             implementation(libs.kotlinx.serialization.json)
             implementation(npm("maplibre-gl", "5.24.0"))
+            implementation(npm("bootstrap-icons", "1.13.1"))
         }
 
         // Uncomment the following if you pass `includeServer = true` into the `configAsKobwebApplication` call.

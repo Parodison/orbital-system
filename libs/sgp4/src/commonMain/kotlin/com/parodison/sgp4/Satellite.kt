@@ -19,6 +19,7 @@ import kotlin.math.sqrt
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
+import com.parodison.sgp4.model.*
 
 /** Resultado de [Satellite.nextPassesFrom]: una pasada visible sobre un [GroundStation]. */
 data class PassPrediction(
@@ -40,10 +41,18 @@ data class PassPrediction(
  * de la capa de ViewModel en `shared`, no de este módulo.
  */
 class Satellite(
-    private val engine: SGP4Engine,
-    val noradCatId: Long,
-    val objectName: String,
+    val orbitData: OrbitData,
 ) {
+    val engine = SGP4Engine(
+        epoch = orbitData.epoch,
+        meanMotionRadPerMin = orbitData.meanMotion * 2.0 * PI / MINUTES_PER_DAY,
+        eccentricity = orbitData.eccentricity,
+        inclinationRad = orbitData.inclination * DEGREES_TO_RADIANS,
+        raanRad = orbitData.raOfAscNode * DEGREES_TO_RADIANS,
+        argPerigeeRad = orbitData.argOfPericenter * DEGREES_TO_RADIANS,
+        meanAnomalyRad = orbitData.meanAnomaly * DEGREES_TO_RADIANS,
+        bstar = orbitData.bstar,
+    )
 
     private var cachedInstant: Instant? = null
     private var cachedState: PositionVelocity? = null
