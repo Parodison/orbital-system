@@ -1,5 +1,7 @@
 package com.parodison.orbital.system.bindings.web
 
+import com.parodison.orbital.system.core.jsObject
+
 external interface Geolocation {
     fun getCurrentPosition(
         successCallback: (Position) -> Unit,
@@ -37,6 +39,16 @@ external interface PositionOptions {
     var timeout: Int
     var maximumAge: Int
 }
+
+fun positionOptions(
+    enableHighAccuracy: Boolean? = null,
+    timeout: Int? = null,
+    maximumAge: Int? = null,
+): PositionOptions = jsObject(
+    "enableHighAccuracy" to enableHighAccuracy,
+    "timeout" to timeout,
+    "maximumAge" to maximumAge,
+).unsafeCast<PositionOptions>()
 
 val org.w3c.dom.Navigator.geolocation: Geolocation
     get() = asDynamic().geolocation as Geolocation

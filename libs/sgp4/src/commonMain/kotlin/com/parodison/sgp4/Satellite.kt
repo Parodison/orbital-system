@@ -21,7 +21,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 import com.parodison.sgp4.model.*
 
-/** Resultado de [Satellite.nextPassesFrom]: una pasada visible sobre un [GroundStation]. */
+/** Resultado de [Satellite.nextPassesFrom]: una pasada visible sobre un [ObserverCoordinates]. */
 data class PassPrediction(
     val aos: Instant,
     val los: Instant,
@@ -84,11 +84,11 @@ class Satellite(
     val periodMinutes: Double get() = engine.periodMinutes
 
     /** Azimuth/elevación/rango/range-rate del satélite visto desde [observer] en el instante [at]. */
-    fun lookAnglesFrom(observer: GroundStation, at: Instant): LookAngles =
+    fun lookAnglesFrom(observer: ObserverCoordinates, at: Instant): LookAngles =
         PositionalAstronomy(observer).computeLookAngles(stateAt(at), at)
 
     /** True si el satélite está por encima de [minElevationDeg] visto desde [observer]. */
-    fun isVisibleFrom(observer: GroundStation, at: Instant, minElevationDeg: Double = 0.0): Boolean =
+    fun isVisibleFrom(observer: ObserverCoordinates, at: Instant, minElevationDeg: Double = 0.0): Boolean =
         lookAnglesFrom(observer, at).elevationDeg >= minElevationDeg
 
     /** True si el satélite está en luz solar directa (no en la sombra cilíndrica de la Tierra). */
@@ -101,7 +101,7 @@ class Satellite(
      * condición real de "se puede ver a simple vista", distinta de [isVisibleFrom].
      */
     fun isVisuallyVisibleFrom(
-        observer: GroundStation,
+        observer: ObserverCoordinates,
         at: Instant,
         minElevationDeg: Double = 10.0,
         twilightSunElevationDeg: Double = -6.0,
@@ -121,7 +121,7 @@ class Satellite(
      * final de la ventana, se reporta con `los` en ese límite.
      */
     fun nextPassesFrom(
-        observer: GroundStation,
+        observer: ObserverCoordinates,
         from: Instant,
         searchWindow: Duration,
         minElevationDeg: Double = 10.0,
@@ -173,7 +173,7 @@ class Satellite(
     }
 
     private fun buildPassPrediction(
-        observer: GroundStation,
+        observer: ObserverCoordinates,
         aos: Instant,
         los: Instant,
         approximateTca: Instant,
@@ -189,7 +189,7 @@ class Satellite(
     }
 
     private fun bisectCrossing(
-        observer: GroundStation,
+        observer: ObserverCoordinates,
         before: Instant,
         after: Instant,
         thresholdDeg: Double,
@@ -205,7 +205,7 @@ class Satellite(
         return hi
     }
 
-    private fun refineMaxElevation(observer: GroundStation, aroundInstant: Instant, step: Duration): Instant {
+    private fun refineMaxElevation(observer: ObserverCoordinates, aroundInstant: Instant, step: Duration): Instant {
         var lo = aroundInstant - step
         var hi = aroundInstant + step
         repeat(TERNARY_SEARCH_ITERATIONS) {

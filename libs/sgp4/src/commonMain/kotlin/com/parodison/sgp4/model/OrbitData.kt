@@ -32,6 +32,13 @@ object CelestrakEpochSerializer : KSerializer<Instant> {
     override fun serialize(encoder: Encoder, value: Instant) = encoder.encodeString(value.toString())
 }
 
+enum class OrbitType {
+    LEO,
+    MEO,
+    GEO,
+    HEO
+}
+
 @Serializable
 data class OrbitData(
     @SerialName("OBJECT_NAME")
@@ -69,7 +76,15 @@ data class OrbitData(
     val meanMotionDot: Double,
     @SerialName("MEAN_MOTION_DDOT")
     val meanMotionDdot: Double,
-)
+) {
+    val orbitType: OrbitType
+        get() = when {
+            meanMotion >= 11.25 -> OrbitType.LEO
+            meanMotion >= 2.0 -> OrbitType.MEO
+            meanMotion in 0.95..1.05 -> OrbitType.GEO
+            else -> OrbitType.HEO
+        }
+}
 
 fun OrbitData.toSatellite(): Satellite {
     return Satellite(

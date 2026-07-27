@@ -14,13 +14,13 @@ import kotlin.math.sqrt
 import kotlin.time.Instant
 
 /** Ubicación de un observador en la superficie terrestre (estación terrena). */
-data class GroundStation(
+data class ObserverCoordinates(
     val latitudeDeg: Double,
     val longitudeDeg: Double,
     val altitudeKm: Double,
 )
 
-/** Resultado de RAZEL: cómo se ve el satélite desde un [GroundStation] en un instante dado. */
+/** Resultado de RAZEL: cómo se ve el satélite desde un [ObserverCoordinates] en un instante dado. */
 data class LookAngles(
     val azimuthDeg: Double,
     val elevationDeg: Double,
@@ -51,7 +51,7 @@ fun subPointOf(satellite: PositionVelocity, at: Instant): GeodeticCoordinates {
  * Es una teoría aparte de SGP4 (astronomía de posición / geodesia, no astrodinámica):
  * solo necesita un vector de posición y velocidad, sin importar de qué propagador vino.
  */
-class PositionalAstronomy(private val groundStation: GroundStation) {
+class PositionalAstronomy(private val groundStation: ObserverCoordinates) {
 
     private val observerEcef = geodeticToEcef(groundStation)
 
@@ -117,7 +117,7 @@ private fun temeToEcef(position: Vector3, velocity: Vector3, gst: Double): Pair<
 }
 
 /** Lat/lon/alt (WGS-72, elipsoidal) -> ECEF, en km. */
-private fun geodeticToEcef(station: GroundStation): Vector3 {
+private fun geodeticToEcef(station: ObserverCoordinates): Vector3 {
     val latitudeRad = station.latitudeDeg.toRadians()
     val longitudeRad = station.longitudeDeg.toRadians()
     val sinLat = sin(latitudeRad)

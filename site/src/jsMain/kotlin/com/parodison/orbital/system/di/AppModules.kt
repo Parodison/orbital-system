@@ -1,5 +1,6 @@
 package com.parodison.orbital.system.di
 
+import com.parodison.orbital.system.controllers.GeolocationController
 import com.parodison.orbital.system.controllers.SatelliteTrackerController
 import com.varabyte.kobweb.core.init.InitKobweb
 import com.varabyte.kobweb.core.init.InitKobwebContext
@@ -22,6 +23,8 @@ import org.koin.dsl.module
 val appModule = module {
     single { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
     single { SatelliteTrackerController(get(), get()) }
+    single { GeolocationController() }
+
 }
 
 @OptIn(ExperimentalSerializationApi::class)

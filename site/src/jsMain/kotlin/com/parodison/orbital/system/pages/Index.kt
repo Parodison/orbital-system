@@ -43,7 +43,7 @@ fun HomePage() {
 
     val satelliteScreenActions = SatelliteScreenActions(
         onSatelliteSelected = {
-            satelliteController.addSatelliteToFavorites(it)
+            satelliteController.trackSatellite(it)
         },
         onSatelliteResumeRequested = {
             satelliteController.updateSelectedSatellite(it.toSatellite())

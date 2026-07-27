@@ -75,6 +75,7 @@ kotlin {
             implementation(libs.silk.icons.fa)
             implementation(libs.kobwebx.serialization.kotlinx)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.compose.html.material3)
             implementation(npm("maplibre-gl", "5.24.0"))
             implementation(npm("bootstrap-icons", "1.13.1"))
         }

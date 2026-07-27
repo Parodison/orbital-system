@@ -143,6 +143,7 @@ fun MapLibreScope.Marker(
     anchor: String? = null,
     content: @Composable () -> Unit = {},
 ) {
+
     val latestContent = rememberUpdatedState(content)
     val markerHost = remember(map) { document.createElement("div") as HTMLElement }
     var markerInstance by remember(map) { mutableStateOf<maplibregl.Marker?>(null) }

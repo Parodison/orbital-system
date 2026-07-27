@@ -5,11 +5,16 @@ import com.parodison.orbital.system.components.bootstrap.BootstrapIcon
 import com.parodison.orbital.system.components.bootstrap.BootstrapIconStyle
 import com.parodison.orbital.system.components.layouts.LocalWindowSize
 import com.parodison.orbital.system.components.layouts.WindowSizeClass
+import com.parodison.orbital.system.components.material3.RippleSurface
 import com.parodison.orbital.system.controllers.SatelliteTrackerController
 import com.parodison.orbital.system.core.AppColors
+import com.parodison.orbital.system.core.roundTo
 import com.parodison.sgp4.Satellite
 import com.parodison.sgp4.model.OrbitData
 import com.varabyte.kobweb.compose.css.Cursor
+import com.varabyte.kobweb.compose.css.Overflow
+import com.varabyte.kobweb.compose.css.TextOverflow
+import com.varabyte.kobweb.compose.css.WhiteSpace
 import com.varabyte.kobweb.compose.foundation.layout.Arrangement
 import com.varabyte.kobweb.compose.foundation.layout.Box
 import com.varabyte.kobweb.compose.foundation.layout.Column
@@ -29,6 +34,7 @@ import com.varabyte.kobweb.silk.style.selectors.hover
 import com.varabyte.kobweb.silk.style.toModifier
 import org.jetbrains.compose.web.css.*
 import org.koin.compose.koinInject
+import kotlin.time.Clock
 
 @Composable
 fun SatelliteCard(
@@ -40,25 +46,29 @@ fun SatelliteCard(
     onSatelliteResumeRequested: (OrbitData) -> Unit = {},
 ) {
     val satelliteTrackerController: SatelliteTrackerController = koinInject()
-    val isMobile = LocalWindowSize.current.sizeClass == WindowSizeClass.Mobile
 
-    Box(
-        modifier = SatelliteCardContainerStyle
-            .toModifier()
-            .thenIf(selected) {
-                Modifier.border(2.px, LineStyle.Solid, AppColors.PrimaryRed)
-            }
-            .then(modifier),
+    RippleSurface(
+        modifier = Modifier.fillMaxWidth()
+            .borderRadius(8.px)
     ) {
-        SatelliteCardDesktopContent(data, favorite, onSatelliteSelected, onSatelliteResumeRequested)
+        Box(
+            modifier = SatelliteCardContainerStyle
+                .toModifier()
+                .onClick { onSatelliteResumeRequested(data.orbitData) }
+                .thenIf(selected) {
+                    Modifier.border(2.px, LineStyle.Solid, AppColors.PrimaryRed)
+                }
+                .then(modifier),
+        ) {
+            SatelliteCardDesktopContent(data,
+                onSatelliteResumeRequested)
+        }
     }
 }
 
 @Composable
 private fun SatelliteCardDesktopContent(
     data: Satellite,
-    favorite: Boolean = false,
-    onSatelliteSelected: (Satellite) -> Unit,
     onSatelliteResumeRequested: (OrbitData) -> Unit,
 ) {
     Row(
@@ -66,9 +76,14 @@ private fun SatelliteCardDesktopContent(
             .fillMaxWidth()
             .padding(10.px),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(20.px)
     ) {
-        Row() {
+        Row(
+            Modifier
+                .width(260.px)
+                .whiteSpace(WhiteSpace.NoWrap)
+                .overflow(Overflow.Hidden)
+                .textOverflow(TextOverflow.Ellipsis)
+        ) {
             MdiSatelliteAlt(
                 modifier = Modifier
                     .width(50.px)
@@ -90,6 +105,7 @@ private fun SatelliteCardDesktopContent(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(20.px)
             ) {
+                
                 Column(
                     verticalArrangement = columnArrangement,
                 ) {
@@ -99,8 +115,20 @@ private fun SatelliteCardDesktopContent(
                 Column(
                     verticalArrangement = columnArrangement,
                 ) {
+                    SpanText("ORBITA")
+                    OrbitTypeContainer(data.orbitData.orbitType)
+                }
+                Column(
+                    verticalArrangement = columnArrangement,
+                ) {
                     SpanText("INCLINACIÓN")
-                    SpanText("${data.orbitData.inclination}°")
+                    SpanText("${data.orbitData.inclination.roundTo(2)}°")
+                }
+                Column(
+                    verticalArrangement = columnArrangement,
+                ) {
+                    SpanText("ALTITUD")
+                    SpanText("${data.altitudeAt(Clock.System.now()).roundTo(2)} km")
                 }
             }
         }
@@ -110,21 +138,6 @@ private fun SatelliteCardDesktopContent(
             horizontalArrangement = Arrangement.spacedBy(5.px),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            var starHover by remember { mutableStateOf(false) }
-
-            BootstrapIcon(
-                name = "bi bi-star",
-                modifier = IconHoverStyle.toModifier()
-                    .title(
-                        if (favorite) "Eliminar de favoritos" else "Añadir a favoritos",
-                    )
-                    .fontSize(20.px)
-                    .onClick { onSatelliteSelected(data) }
-                    .onMouseEnter {starHover = true}
-                    .onMouseLeave {starHover = false}
-                    .then(if (favorite) Modifier.color(rgb(246, 60, 54)) else Modifier),
-                style = if (starHover || favorite) BootstrapIconStyle.FILLED else BootstrapIconStyle.OUTLINED
-            )
             MdiKeyboardArrowRight(
                 modifier = IconHoverStyle
                     .toModifier()
@@ -134,61 +147,6 @@ private fun SatelliteCardDesktopContent(
     }
 }
 
-@Composable
-private fun SatelliteCardMobileContent(
-    data: OrbitData,
-    onSatelliteSelected: (OrbitData) -> Unit,
-    onSatelliteResumeRequested: (OrbitData) -> Unit,
-) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(10.px),
-        verticalArrangement = Arrangement.spacedBy(10.px),
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.px),
-            ) {
-                MdiSatelliteAlt(
-                    modifier = Modifier
-                        .width(36.px)
-                        .color(Colors.White)
-                )
-                SpanText(data.objectName)
-            }
-            MdiStar(
-                modifier = IconHoverStyle.toModifier()
-                    .onClick { onSatelliteSelected(data) },
-                style = IconStyle.OUTLINED
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .cursor(Cursor.Pointer)
-                .onClick { onSatelliteResumeRequested(data) },
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.px)) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.px)) {
-                    SpanText("NORAD ID", modifier = Modifier.color(Colors.Gray))
-                    SpanText(data.noradCatId.toString())
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(4.px)) {
-                    SpanText("INCLINACIÓN", modifier = Modifier.color(Colors.Gray))
-                    SpanText("${data.inclination}°")
-                }
-            }
-            MdiKeyboardArrowRight()
-        }
-    }
-}
 
 val IconHoverStyle = CssStyle {
     base {
@@ -209,6 +167,8 @@ val SatelliteCardContainerStyle = CssStyle {
             .backgroundColor(AppColors.DarkBluePrimary)
             .border(1.5.px, LineStyle.Solid, AppColors.OutlineGray)
             .borderRadius(8.px)
+            .overflow(Overflow.Hidden)
+            .cursor(Cursor.Pointer)
     }
 
     hover {

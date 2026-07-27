@@ -18,6 +18,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 sealed class SatelliteListState {
     object Idle : SatelliteListState()
@@ -36,8 +38,11 @@ class SatelliteTrackerController(
     private val _selectedSatellite = MutableStateFlow<Satellite?>(null)
     val selectedSatellite = _selectedSatellite.asStateFlow()
 
-    private val _favoritesSatellites = MutableStateFlow<List<Satellite>>(emptyList())
-    val favoritesSatellites = _favoritesSatellites.asStateFlow()
+    private val _trackingSatellites = MutableStateFlow<List<Satellite>>(emptyList())
+    val trackingSatellites = _trackingSatellites.asStateFlow()
+
+    private val _trackingDelay = MutableStateFlow<Duration>(300.milliseconds)
+    val trackingDelay = _trackingDelay.asStateFlow()
 
     init {
         """if (_satelliteListState.value is SatelliteListState.Idle) {
@@ -49,13 +54,20 @@ class SatelliteTrackerController(
         )
     }
 
-    fun addSatelliteToFavorites(satellite: Satellite) {
-        _favoritesSatellites.update { currentList ->
-            if (satellite in currentList) {
-                currentList - satellite
-            } else {
-                currentList + satellite
-            }
+    fun trackSatellite(satellite: Satellite) {
+        _trackingSatellites.value = (_trackingSatellites.value + satellite).distinctBy { it.orbitData.noradCatId }
+    }
+
+    fun untrackSatellite(satellite: Satellite) {
+        _trackingSatellites.value = _trackingSatellites.value.filter { it != satellite }
+    }
+
+    fun handleSatelliteTrack(satellite: Satellite) {
+        val currentList = _trackingSatellites.value
+        _trackingSatellites.value = if (currentList.any { it.orbitData.noradCatId == satellite.orbitData.noradCatId }) {
+            currentList.filter { it.orbitData.noradCatId != satellite.orbitData.noradCatId }
+        } else {
+            (currentList + satellite).distinctBy { it.orbitData.noradCatId }
         }
     }
 

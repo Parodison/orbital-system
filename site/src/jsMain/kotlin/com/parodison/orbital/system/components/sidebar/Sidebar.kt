@@ -32,7 +32,7 @@ val routeItems = listOf<RouteItem>(
     RouteItem(
         label = "Mapa",
         icon = "map",
-        route = "/mapa"
+        route = "/mapa/"
     )
 
 )
@@ -40,7 +40,7 @@ val routeItems = listOf<RouteItem>(
 
 @Composable
 fun RowScope.Sidebar(context: PageContext, modifier: Modifier = Modifier) {
-
+    println(context.route.path)
     Surface(
         modifier = modifier
             .backgroundColor(AppColors.DarkBluePrimary)
@@ -52,6 +52,7 @@ fun RowScope.Sidebar(context: PageContext, modifier: Modifier = Modifier) {
         ) {
 
             routeItems.forEach { item ->
+                println("Estamos en la ruta del item: ${item.label}?: ${context.route.path == item.route}")
                 SidebarElement(
                     label = item.label,
                     icon = {

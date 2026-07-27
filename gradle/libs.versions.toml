@@ -1,5 +1,6 @@
 [versions]
 compose-html = "1.11.1"
+compose-html-material3 = "0.5.0"
 compose-runtime = "1.11.2"
 kobweb = "0.25.0"
 kotlin = "2.4.0"
@@ -44,6 +45,7 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+compose-html-material3 = { module = "com.huanshankeji:compose-html-material3", version.ref = "compose-html-material3" }
 
 
 [plugins]

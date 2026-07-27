@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
-import com.parodison.orbital.system.components.sidebar.BottomBar
 import com.parodison.orbital.system.components.sidebar.Sidebar
 import com.parodison.orbital.system.core.AppColors
 import com.varabyte.kobweb.compose.css.BoxSizing
@@ -108,13 +107,6 @@ private fun ColumnScope.MobileLayout(
     ) {
         content()
     }
-    BottomBar(
-        context,
-        Modifier
-            .fillMaxWidth()
-            .backgroundColor(AppColors.DarkBluePrimary)
-            .borderTop(2.px, LineStyle.Solid, AppColors.OutlineGray)
-    )
 }
 
 @Composable

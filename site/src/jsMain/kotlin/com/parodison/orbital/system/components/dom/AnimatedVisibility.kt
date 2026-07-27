@@ -22,12 +22,14 @@ import com.varabyte.kobweb.compose.ui.modifiers.width
 import com.varabyte.kobweb.silk.style.CssStyle
 import com.varabyte.kobweb.silk.style.selectors.hover
 import kotlinx.browser.window
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.web.css.AnimationTimingFunction
 import org.jetbrains.compose.web.css.CSSSizeValue
 import org.jetbrains.compose.web.css.CSSUnit
 import org.jetbrains.compose.web.css.mm
 import org.jetbrains.compose.web.css.ms
 import org.jetbrains.compose.web.css.px
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Equivalente simplificado de `AnimatedVisibility` de Jetpack Compose para Kobweb.
@@ -47,7 +49,12 @@ fun AnimatedVisibility(
     var mounted by remember { mutableStateOf(false) }
 
     LaunchedEffect(visible) {
-        mounted = visible
+        if (visible) {
+            mounted = true
+        } else {
+            delay(durationMs.value.toLong().milliseconds)
+            mounted = false
+        }
     }
 
 

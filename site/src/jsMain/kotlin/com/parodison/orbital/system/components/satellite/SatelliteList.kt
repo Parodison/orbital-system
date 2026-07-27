@@ -5,7 +5,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.unit.dp
 import com.parodison.orbital.system.controllers.SatelliteTrackerController
 import com.parodison.orbital.system.pages.LocalSatelliteScreenActions
 import com.parodison.sgp4.Satellite
@@ -15,7 +14,6 @@ import com.varabyte.kobweb.compose.foundation.layout.Row
 import com.varabyte.kobweb.compose.ui.Alignment
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.modifiers.fillMaxWidth
-import com.varabyte.kobweb.compose.ui.modifiers.padding
 import com.varabyte.kobweb.silk.components.text.SpanText
 import org.jetbrains.compose.web.css.px
 import org.koin.compose.koinInject
@@ -28,7 +26,7 @@ fun SatelliteListComponent(
     val satelliteScreenActions = LocalSatelliteScreenActions.current
     val satelliteTrackerController: SatelliteTrackerController = koinInject()
     val selectedSatellite by satelliteTrackerController.selectedSatellite.collectAsState()
-    val favoritesSatellites by satelliteTrackerController.favoritesSatellites.collectAsState()
+    val trackingSatellites by satelliteTrackerController.trackingSatellites.collectAsState()
 
     Column(
         modifier = modifier,
@@ -47,15 +45,15 @@ fun SatelliteListComponent(
         ) {
             satelliteList.forEach { data ->
                 val isSelected = selectedSatellite?.orbitData?.noradCatId == data.orbitData.noradCatId
-                val isInFavoritedList by remember(favoritesSatellites, data) {
-                    derivedStateOf { favoritesSatellites.contains(data) }
+                val isInTrackingList by remember(trackingSatellites, data) {
+                    derivedStateOf { trackingSatellites.contains(data) }
                 }
 
                 SatelliteCard(
                     modifier = Modifier.fillMaxWidth(),
                     data = data,
                     selected = isSelected,
-                    favorite = isInFavoritedList,
+                    favorite = isInTrackingList,
                     onSatelliteSelected = {
                         satelliteScreenActions.onSatelliteSelected(it)
                     },

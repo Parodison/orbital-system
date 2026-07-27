@@ -62,7 +62,7 @@ internal object SolarPosition {
     }
 
     /** Elevación del Sol (grados) vista desde [observer] en el instante [at]. */
-    fun solarElevationDeg(observer: GroundStation, at: Instant): Double {
+    fun solarElevationDeg(observer: ObserverCoordinates, at: Instant): Double {
         val sun = positionEci(at)
         val rightAscensionRad = atan2(sun.y, sun.x)
         val declinationRad = asin(sun.z / sun.magnitude())
