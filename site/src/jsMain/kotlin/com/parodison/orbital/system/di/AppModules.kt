@@ -2,11 +2,14 @@ package com.parodison.orbital.system.di
 
 import com.parodison.orbital.system.controllers.GeolocationController
 import com.parodison.orbital.system.controllers.SatelliteTrackerController
+import com.parodison.shared.BuildKonfig
 import com.varabyte.kobweb.core.init.InitKobweb
 import com.varabyte.kobweb.core.init.InitKobwebContext
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.resources.Resources
+import io.ktor.client.request.accept
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.cbor.cbor
@@ -32,8 +35,10 @@ val networkModule = module {
     single {
         HttpClient {
             defaultRequest {
-                contentType(ContentType.Application.Json)
+                url(BuildKonfig.BACKEND_URL)
+                accept(ContentType.Application.Cbor)
             }
+            install(Resources)
             install(ContentNegotiation) {
                 json(Json {
                     ignoreUnknownKeys = true

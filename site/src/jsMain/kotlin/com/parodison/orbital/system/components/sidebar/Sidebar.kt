@@ -1,6 +1,7 @@
 package com.parodison.orbital.system.components.sidebar
 
 import androidx.compose.runtime.Composable
+import com.parodison.orbital.system.components.layouts.routeItems
 import com.parodison.orbital.system.core.AppColors
 import com.varabyte.kobweb.compose.css.Overflow
 import com.varabyte.kobweb.compose.foundation.layout.Arrangement
@@ -16,26 +17,6 @@ import com.varabyte.kobweb.silk.components.icons.mdi.IconStyle
 import com.varabyte.kobweb.silk.components.icons.mdi.MdIcon
 import com.varabyte.kobweb.silk.components.layout.Surface
 import org.jetbrains.compose.web.css.px
-
-data class RouteItem(
-    val label: String,
-    val icon: String,
-    val route: String
-)
-
-val routeItems = listOf<RouteItem>(
-    RouteItem(
-        label = "Satélites",
-        icon = "satellite_alt",
-        route = "/"
-    ),
-    RouteItem(
-        label = "Mapa",
-        icon = "map",
-        route = "/mapa/"
-    )
-
-)
 
 
 @Composable

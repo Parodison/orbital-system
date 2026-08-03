@@ -12,13 +12,16 @@ import com.parodison.orbital.system.components.maplibre.MapLibreMap
 import com.parodison.orbital.system.components.maplibre.Marker
 import com.parodison.orbital.system.components.maplibre.Polygon
 import com.parodison.orbital.system.components.maplibre.rememberMapLibreState
+import com.parodison.orbital.system.controllers.GeolocationController
 import com.parodison.orbital.system.controllers.SatelliteTrackerController
+import com.parodison.orbital.system.controllers.toObserverOrNull
 import com.parodison.orbital.system.core.AppColors
 import com.parodison.orbital.system.core.lngLatArray
 import com.parodison.orbital.system.core.mapOptions
 import com.parodison.orbital.system.core.roundTo
-import com.parodison.sgp4.GeodeticCoordinates
-import com.parodison.sgp4.Satellite
+import com.parodison.orbit.core.satellite.ObserverCoordinates
+import com.parodison.orbit.core.satellite.PassPrediction
+import com.parodison.orbit.core.satellite.Satellite
 import com.varabyte.kobweb.compose.foundation.layout.Arrangement
 import com.varabyte.kobweb.compose.foundation.layout.Box
 import com.varabyte.kobweb.compose.foundation.layout.Column
@@ -30,14 +33,15 @@ import com.varabyte.kobweb.compose.ui.graphics.Colors
 import com.varabyte.kobweb.compose.ui.modifiers.*
 import com.varabyte.kobweb.compose.ui.styleModifier
 import com.varabyte.kobweb.compose.ui.toAttrs
-import com.varabyte.kobweb.core.App
+import com.varabyte.kobweb.silk.components.icons.mdi.MdiCalendarToday
 import com.varabyte.kobweb.silk.components.icons.mdi.MdiClose
 import com.varabyte.kobweb.silk.components.icons.mdi.MdiMyLocation
 import com.varabyte.kobweb.silk.components.icons.mdi.MdiSatelliteAlt
-import com.varabyte.kobweb.silk.components.icons.mdi.MdiStar
 import com.varabyte.kobweb.silk.components.text.SpanText
 import com.varabyte.kobweb.silk.style.toModifier
 import kotlinx.coroutines.delay
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import org.jetbrains.compose.web.css.LineStyle
 import org.jetbrains.compose.web.css.percent
 import org.jetbrains.compose.web.css.px
@@ -45,16 +49,33 @@ import org.jetbrains.compose.web.css.rgb
 import org.koin.compose.koinInject
 import kotlin.time.Clock
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.Instant
 
+private val PASSES_SEARCH_WINDOW = 48.hours
+private const val PASSES_SHOWN = 5
+
+private fun Instant.toDateTimeLabel(): String {
+    val local = toLocalDateTime(TimeZone.currentSystemDefault())
+    val day = local.date.day.toString().padStart(2, '0')
+    val month = local.date.month.toString().padStart(2, '0')
+    val hour = local.hour.toString().padStart(2, '0')
+    val minute = local.minute.toString().padStart(2, '0')
+    val second = local.second.toString().padStart(2, '0')
+    return "$day/$month/${local.date.year} $hour:$minute:$second"
+}
+
 @Composable
-fun SatelliteResume(satellite: Satellite) {
+fun SatelliteResume(satellite: Satellite, onCloseRequested: () -> Unit) {
     val satelliteTrackerController: SatelliteTrackerController = koinInject()
     val trackingSatellites by satelliteTrackerController.trackingSatellites.collectAsState()
     val trackingDelay by satelliteTrackerController.trackingDelay.collectAsState()
+
+    val geolocationController: GeolocationController = koinInject()
+    val geolocationState by geolocationController.geolocationState.collectAsState()
+    val observer = geolocationState.toObserverOrNull()
 
     Column(
         Modifier.fillMaxWidth()
@@ -63,20 +84,19 @@ fun SatelliteResume(satellite: Satellite) {
             .border(1.px, LineStyle.Solid, AppColors.OutlineGray)
             .borderRadius(10.px)
             .padding(15.px),
-        verticalArrangement = Arrangement.spacedBy(10.px),
+        verticalArrangement = Arrangement.spacedBy(15.px),
     ) {
         SatelliteResumeHeader(
             satellite,
-            tracking = trackingSatellites.any { it.orbitData.noradCatId == satellite.orbitData.noradCatId },
-            onCloseRequested = {
-                satelliteTrackerController.clearSelectedSatellite()
-            },
+            tracking = trackingSatellites.any { it.omm.noradCatId == satellite.omm.noradCatId },
+            onCloseRequested = onCloseRequested,
             onTrackSattelliteRequested = { satelliteTrackerController.handleSatelliteTrack(it) },
         )
         ActualLocationComponent(
             satellite,
             trackingDelay
         )
+        UpcomingPassesSection(satellite, observer)
     }
 }
 
@@ -107,13 +127,13 @@ private fun ColumnScope.SatelliteResumeHeader(
                 verticalArrangement = Arrangement.spacedBy(10.px)
             ) {
                 SpanText(
-                    satellite.orbitData.objectName,
+                    satellite.omm.objectName,
                     modifier = Modifier
                         .fontWeight(600)
                         .fontSize(20.px)
                 )
                 SpanText(
-                    "NORAD ID: ${satellite.orbitData.noradCatId}",
+                    "NORAD ID: ${satellite.omm.noradCatId}",
                     modifier = Modifier
                         .fontWeight(500)
                         .fontSize(12.px)
@@ -203,6 +223,18 @@ private fun ColumnScope.SatelliteResumeHeader(
 }
 
 @Composable
+private fun ColumnScope.SectionHeader(icon: @Composable () -> Unit, title: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(10.px),
+        horizontalArrangement = Arrangement.spacedBy(8.px),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.fontSize(16.px).color(Colors.Gray)) { icon() }
+        SpanText(title, modifier = Modifier.fontWeight(600))
+    }
+}
+
+@Composable
 private fun ColumnScope.ActualLocationComponent(
     satellite: Satellite,
     trackingDelay: Duration,
@@ -235,17 +267,7 @@ private fun ColumnScope.ActualLocationComponent(
             Column(
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(10.px),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    SpanText(
-                        "Ubicación actual",
-                        modifier = Modifier
-                            .fontWeight(600)
-                    )
-                }
+                SectionHeader(icon = { MdiMyLocation() }, title = "Ubicación actual")
                 Box(
                     Modifier.fillMaxWidth().height(350.px)
                         .borderTop(1.px, LineStyle.Solid, AppColors.OutlineGray)
@@ -281,7 +303,7 @@ private fun ColumnScope.ActualLocationComponent(
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                 ) {
                                     MdiSatelliteAlt()
-                                    SpanText(satellite.orbitData.objectName, modifier = Modifier)
+                                    SpanText(satellite.omm.objectName, modifier = Modifier)
                                 }
                             }
                         }
@@ -311,6 +333,88 @@ private fun ColumnScope.ActualLocationComponent(
                     )
                 }
 
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.UpcomingPassesSection(
+    satellite: Satellite,
+    observer: ObserverCoordinates?,
+) {
+    val passes = remember(satellite, observer) {
+        observer?.let {
+            satellite.nextPassesFrom(
+                observer = it,
+                from = Clock.System.now(),
+                searchWindow = PASSES_SEARCH_WINDOW,
+            ).take(PASSES_SHOWN)
+        }
+    }
+
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .border(1.px, LineStyle.Solid, AppColors.OutlineGray)
+            .borderRadius(10.px),
+    ) {
+        Column(Modifier.fillMaxWidth()) {
+            SectionHeader(icon = { MdiCalendarToday() }, title = "Próximas pasadas")
+
+            when {
+                observer == null -> {
+                    SpanText(
+                        "Activá la geolocalización para ver las próximas pasadas",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(leftRight = 10.px, topBottom = 15.px)
+                            .fontSize(12.px)
+                            .color(Colors.Gray)
+                    )
+                }
+                passes.isNullOrEmpty() -> {
+                    SpanText(
+                        "Sin pasadas visibles en las próximas ${PASSES_SEARCH_WINDOW.inWholeHours}h",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(leftRight = 10.px, topBottom = 15.px)
+                            .fontSize(12.px)
+                            .color(Colors.Gray)
+                    )
+                }
+                else -> {
+                    PassesTable(passes)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PassesTable(passes: List<PassPrediction>) {
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(leftRight = 10.px, topBottom = 6.px)
+                .borderTop(1.px, LineStyle.Solid, AppColors.OutlineGray),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            SpanText("AOS", modifier = Modifier.fontSize(11.px).color(Colors.Gray))
+            SpanText("ELEV. MÁX", modifier = Modifier.fontSize(11.px).color(Colors.Gray))
+        }
+        passes.forEach { pass ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(leftRight = 10.px, topBottom = 8.px)
+                    .borderTop(1.px, LineStyle.Solid, AppColors.OutlineGray),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SpanText(pass.aos.toDateTimeLabel(), modifier = Modifier.fontSize(13.px))
+                SpanText("${pass.maxElevationDeg.roundTo(1)}°", modifier = Modifier.fontWeight(600))
             }
         }
     }

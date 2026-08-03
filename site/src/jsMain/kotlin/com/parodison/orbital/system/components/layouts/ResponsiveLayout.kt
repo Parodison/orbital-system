@@ -1,5 +1,6 @@
 package com.parodison.orbital.system.components.layouts
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -9,11 +10,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import com.parodison.orbital.system.components.sidebar.Sidebar
+import com.parodison.orbital.system.components.sidebar.SidebarSpanStyle
 import com.parodison.orbital.system.core.AppColors
 import com.varabyte.kobweb.compose.css.BoxSizing
 import com.varabyte.kobweb.compose.css.FontWeight
 import com.varabyte.kobweb.compose.css.ObjectFit
 import com.varabyte.kobweb.compose.css.Overflow
+import com.varabyte.kobweb.compose.css.TransitionTimingFunction
 import com.varabyte.kobweb.compose.foundation.layout.Arrangement
 import com.varabyte.kobweb.compose.foundation.layout.Box
 import com.varabyte.kobweb.compose.foundation.layout.Column
@@ -38,21 +41,55 @@ import com.varabyte.kobweb.compose.ui.modifiers.height
 import com.varabyte.kobweb.compose.ui.modifiers.maxHeight
 import com.varabyte.kobweb.compose.ui.modifiers.minHeight
 import com.varabyte.kobweb.compose.ui.modifiers.objectFit
+import com.varabyte.kobweb.compose.ui.modifiers.onClick
 import com.varabyte.kobweb.compose.ui.modifiers.overflow
 import com.varabyte.kobweb.compose.ui.modifiers.padding
+import com.varabyte.kobweb.compose.ui.modifiers.position
+import com.varabyte.kobweb.compose.ui.modifiers.size
+import com.varabyte.kobweb.compose.ui.modifiers.transition
 import com.varabyte.kobweb.compose.ui.modifiers.width
+import com.varabyte.kobweb.compose.ui.styleModifier
+import com.varabyte.kobweb.compose.ui.toAttrs
 import com.varabyte.kobweb.core.App
 import com.varabyte.kobweb.core.PageContext
 import com.varabyte.kobweb.core.layout.Layout
 import com.varabyte.kobweb.silk.components.graphics.Image
+import com.varabyte.kobweb.silk.components.icons.mdi.IconStyle
+import com.varabyte.kobweb.silk.components.icons.mdi.MdIcon
 import com.varabyte.kobweb.silk.components.layout.Surface
 import com.varabyte.kobweb.silk.components.text.SpanText
+import com.varabyte.kobweb.silk.style.toModifier
 import kotlinx.browser.window
 import org.jetbrains.compose.web.css.LineStyle
+import org.jetbrains.compose.web.css.Position
+import org.jetbrains.compose.web.css.ms
 import org.jetbrains.compose.web.css.percent
 import org.jetbrains.compose.web.css.px
 import org.jetbrains.compose.web.css.vh
+import org.jetbrains.compose.web.dom.Span
+import org.jetbrains.compose.web.dom.TagElement
+import org.w3c.dom.HTMLElement
 import org.w3c.dom.events.Event
+
+data class RouteItem(
+    val label: String,
+    val icon: String,
+    val route: String
+)
+
+val routeItems = listOf<RouteItem>(
+    RouteItem(
+        label = "Satélites",
+        icon = "satellite_alt",
+        route = "/"
+    ),
+    RouteItem(
+        label = "Mapa",
+        icon = "map",
+        route = "/mapa/"
+    )
+
+)
 
 @Layout
 @Composable
@@ -102,10 +139,96 @@ private fun ColumnScope.MobileLayout(
     context: PageContext,
     content: @Composable () -> Unit
 ) {
-    Box(
-        Modifier.weight(1f).fillMaxWidth().padding(15.px)
+    Column(
+        Modifier.weight(1f).fillMaxWidth().height(100.vh)
     ) {
-        content()
+        MobileHeader()
+        Box(
+            Modifier.fillMaxWidth()
+                .weight(1f)
+                .height(100.percent)
+                .overflow(Overflow.Hidden)
+        ) {
+            content()
+        }
+        BottomNav(context)
+    }
+}
+
+@Composable
+private fun MobileHeader() {
+    Row(
+        Modifier.fillMaxWidth().padding(15.px),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        SpanText(
+            "ORBITAL SYSTEM",
+            modifier = Modifier
+                .fontSize(20.px)
+                .fontWeight(FontWeight.Bold)
+        )
+    }
+}
+
+@Composable
+private fun BottomNav(
+    context: PageContext
+) {
+    Box(
+        Modifier.fillMaxWidth()
+            .backgroundColor(AppColors.DarkBlue)
+            .borderTop(2.px, LineStyle.Solid, AppColors.OutlineGray)
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(topBottom = 10.px),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            routeItems.forEach { item ->
+                val selected = context.route.path == item.route
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .position(Position.Relative)
+                        .fillMaxWidth()
+                        .styleModifier {
+                            property("--md-ripple-hover-color", "white")
+                            property("--md-ripple-hover-opacity", "0.12")
+                            property("--md-ripple-pressed-color", "white")
+                            property("--md-ripple-pressed-opacity", "0.24")
+                        }
+                        .onClick { context.router.navigateTo(item.route) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    TagElement<HTMLElement>(
+                        tagName = "md-ripple",
+                        applyAttrs = null
+                    ) {
+
+                    }
+                    MdIcon(
+                        item.icon,
+                        modifier = Modifier.width(30.px),
+                        style = if (context.route.path == item.route) IconStyle.FILLED else IconStyle.OUTLINED
+                    )
+                    SpanText(item.label)
+                    Span(
+                        attrs = Modifier
+                            .height(3.px)
+                            .width(if (selected) 32.px else 0.px)
+                            .borderRadius(20.px)
+                            .backgroundColor(if (selected) AppColors.PrimaryRed else Colors.Transparent)
+                            .transition {
+                                property("width", "background-color")
+                                duration(200.ms)
+                                timingFunction(TransitionTimingFunction.EaseInOut)
+                            }
+                            .toAttrs()
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -123,17 +246,16 @@ private fun ColumnScope.DesktopLayout(
         Column(
             verticalArrangement = Arrangement.spacedBy(10.px)
         ) {
-            SpanText(
-                "ORBITAL SYSTEM",
+            Image(
+                "orbitflow-horizontal.svg",
+                alt = "Orbit Flow",
                 modifier = Modifier
-                    .fontSize(20.px)
-                    .fontWeight(FontWeight.Bold)
+                    .width(200.px)
             )
         }
     }
     Row(
         Modifier.fillMaxWidth().weight(1f).minHeight(0.px),
-        horizontalArrangement = Arrangement.spacedBy(25.px)
     ) {
 
         Sidebar(

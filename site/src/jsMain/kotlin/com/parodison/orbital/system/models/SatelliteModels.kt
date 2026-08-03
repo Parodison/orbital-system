@@ -1,7 +1,7 @@
 package com.parodison.orbital.system.models
 
-import com.parodison.sgp4.SGP4Engine
-import com.parodison.sgp4.Satellite
+import com.parodison.orbit.core.sgp4.SGP4Engine
+import com.parodison.orbit.core.satellite.Satellite
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

@@ -38,4 +38,4 @@ plugins {
 
 include(":site")
 include(":server")
-include(":libs:sgp4")
+include(":shared")

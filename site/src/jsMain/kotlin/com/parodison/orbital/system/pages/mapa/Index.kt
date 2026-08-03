@@ -8,6 +8,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.parodison.orbital.system.components.layouts.LocalWindowSize
+import com.parodison.orbital.system.components.layouts.WindowSizeClass
 import com.parodison.orbital.system.components.location.BlueDotContainer
 import com.parodison.orbital.system.components.maplibre.*
 import com.parodison.orbital.system.components.satellite.SatelliteFloatingContainer
@@ -17,9 +19,9 @@ import com.parodison.orbital.system.components.tracking.TrackingTimeline
 import com.parodison.orbital.system.controllers.GeolocationController
 import com.parodison.orbital.system.controllers.GeolocationState
 import com.parodison.orbital.system.controllers.SatelliteTrackerController
+import com.parodison.orbital.system.controllers.toObserverOrNull
 import com.parodison.orbital.system.core.*
-import com.parodison.sgp4.ObserverCoordinates
-import com.parodison.sgp4.Satellite
+import com.parodison.orbit.core.satellite.Satellite
 import com.varabyte.kobweb.compose.css.Overflow
 import com.varabyte.kobweb.compose.foundation.layout.Box
 import com.varabyte.kobweb.compose.ui.*
@@ -58,20 +60,20 @@ fun MapScreen() {
     var liveTracking by remember { mutableStateOf(true) }
     var paused by remember { mutableStateOf(false) }
 
-    val observer = (geolocationState as? GeolocationState.Tracking)?.position?.coords?.let { coords ->
-        ObserverCoordinates(
-            latitudeDeg = coords.latitude,
-            longitudeDeg = coords.longitude,
-            altitudeKm = (coords.altitude ?: 0.0) / 1000.0,
-        )
-    }
+    val observer = geolocationState.toObserverOrNull()
+    val windowSize = LocalWindowSize.current
 
 
     Box(
         Modifier.fillMaxSize()
-            .border(2.px, LineStyle.Solid, AppColors.OutlineGray)
-            .borderRadius(8.px)
             .overflow(Overflow.Hidden)
+            .then(if (windowSize.sizeClass == WindowSizeClass.Mobile) {
+                Modifier
+            } else {
+                Modifier
+                    .border(2.px, LineStyle.Solid, AppColors.OutlineGray)
+                    .borderRadius(8.px)
+            })
     ) {
 
         MapLibreMap(

@@ -1,6 +1,12 @@
 ktor:
   deployment:
-    port: 8000
+    port: 8081
   application:
     modules:
-      - com.parodison.orbital.system.ApplicationKt.module
+      - com.parodison.orbital.server.ApplicationKt.module
+database:
+  driver: ${DATABASE_DRIVER}
+  url: ${DATABASE_URL}
+  user: ${DATABASE_USER}
+  password: ${DATABASE_PASSWORD}
+  maxPoolSize: 10

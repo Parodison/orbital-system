@@ -10,8 +10,8 @@ import androidx.compose.runtime.setValue
 import com.parodison.orbital.system.components.maplibre.MapLibreScope
 import com.parodison.orbital.system.components.maplibre.Marker
 import com.parodison.orbital.system.core.lngLatArray
-import com.parodison.sgp4.GeodeticCoordinates
-import com.parodison.sgp4.Satellite
+import com.parodison.orbit.core.sgp4.model.GeodeticCoordinates
+import com.parodison.orbit.core.satellite.Satellite
 import com.varabyte.kobweb.compose.foundation.layout.Arrangement
 import com.varabyte.kobweb.compose.foundation.layout.Column
 import com.varabyte.kobweb.compose.ui.Modifier
@@ -73,7 +73,7 @@ fun MapLibreScope.SatelliteTrackingMarker(
             MdiSatelliteAlt(
                 style = if (selected) IconStyle.FILLED else IconStyle.OUTLINED
             )
-            SpanText(satellite.orbitData.objectName)
+            SpanText(satellite.omm.objectName)
         }
     }
 }

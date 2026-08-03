@@ -19,10 +19,12 @@ import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Colors
 import com.varabyte.kobweb.compose.ui.modifiers.border
 import com.varabyte.kobweb.compose.ui.modifiers.boxSizing
+import com.varabyte.kobweb.compose.ui.modifiers.fillMaxSize
 import com.varabyte.kobweb.compose.ui.modifiers.fillMaxWidth
 import com.varabyte.kobweb.compose.ui.modifiers.fontSize
 import com.varabyte.kobweb.compose.ui.modifiers.fontWeight
 import com.varabyte.kobweb.compose.ui.modifiers.margin
+import com.varabyte.kobweb.compose.ui.modifiers.minHeight
 import com.varabyte.kobweb.compose.ui.modifiers.padding
 import com.varabyte.kobweb.silk.components.text.SpanText
 import org.jetbrains.compose.web.css.Color
@@ -32,26 +34,22 @@ import org.jetbrains.compose.web.css.px
 import org.koin.compose.koinInject
 
 @Composable
-fun SatelliteListScreen() {
+fun SatelliteListScreen(modifier: Modifier = Modifier) {
     val satelliteTrackerController: SatelliteTrackerController = koinInject()
     val satelliteListState by satelliteTrackerController.satelliteListState.collectAsState()
 
     var satelliteSearchText by remember { mutableStateOf("") }
 
-
-
-
     when(val s = satelliteListState) {
         is SatelliteListState.Success -> {
             Column(
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.px),
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(leftRight = 20.px)
                         .boxSizing(BoxSizing.BorderBox),
                     verticalArrangement = Arrangement.spacedBy(15.px),
                 ) {
@@ -72,18 +70,27 @@ fun SatelliteListScreen() {
                     )
                 }
                 Box(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .minHeight(0.px)
                 ) {
                     SatelliteListComponent(
-                        modifier = Modifier.fillMaxWidth()
-                            .padding(leftRight = 20.px),
+                        modifier = Modifier
+                            .fillMaxSize(),
                         satelliteList = s.data
                     )
                 }
             }
         }
-        else -> {
-            SpanText("Pendiente de implementación")
+        is SatelliteListState.Loading -> {
+            SpanText("Cargando satélites...")
+        }
+        is SatelliteListState.Error -> {
+            SpanText("Error: ${s.message}")
+        }
+        is SatelliteListState.Idle -> {
+            SpanText("Sin datos")
         }
     }
 }

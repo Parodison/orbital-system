@@ -24,7 +24,7 @@ import com.parodison.orbital.system.core.lngLat
 import com.parodison.orbital.system.core.markerOptions
 import com.parodison.orbital.system.core.maplibregl
 import com.parodison.orbital.system.core.onLoad
-import com.parodison.sgp4.GeodeticCoordinates
+import com.parodison.orbit.core.sgp4.model.GeodeticCoordinates
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Color
 import com.varabyte.kobweb.compose.ui.toAttrs
@@ -344,7 +344,7 @@ fun MapLibreScope.AnimatedLine(
 
 /**
  * Polígono relleno declarativo (GeoJSON `Polygon` + layer `fill`) — por ejemplo para el círculo
- * de cobertura de [com.parodison.sgp4.Satellite.footprintPolygon]. [points] es el anillo
+ * de cobertura de [com.parodison.orbit.core.satellite.Satellite.footprintPolygon]. [points] es el anillo
  * exterior; se cierra solo si no viene ya cerrado. Wrapper fino sobre [GeoJsonLayer].
  */
 @Composable

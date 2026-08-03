@@ -3,6 +3,7 @@ package com.parodison.orbital.system.controllers
 import com.parodison.orbital.system.bindings.web.Position
 import com.parodison.orbital.system.bindings.web.geolocation
 import com.parodison.orbital.system.bindings.web.positionOptions
+import com.parodison.orbit.core.satellite.ObserverCoordinates
 import kotlinx.browser.window
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,6 +14,16 @@ sealed interface GeolocationState {
         val position: Position
     ) : GeolocationState
     data class Denied(val cause: String) : GeolocationState
+}
+
+/** Convierte la posición trackeada (si la hay) a [ObserverCoordinates], para look angles/pasadas. */
+fun GeolocationState.toObserverOrNull(): ObserverCoordinates? {
+    val coords = (this as? GeolocationState.Tracking)?.position?.coords ?: return null
+    return ObserverCoordinates(
+        latitudeDeg = coords.latitude,
+        longitudeDeg = coords.longitude,
+        altitudeKm = (coords.altitude ?: 0.0) / 1000.0,
+    )
 }
 
 class GeolocationController {

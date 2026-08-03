@@ -7,13 +7,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.parodison.orbital.system.controllers.SatelliteTrackerController
 import com.parodison.orbital.system.pages.LocalSatelliteScreenActions
-import com.parodison.sgp4.Satellite
+import com.parodison.orbit.core.satellite.Satellite
+import com.varabyte.kobweb.compose.css.Overflow
 import com.varabyte.kobweb.compose.foundation.layout.Arrangement
 import com.varabyte.kobweb.compose.foundation.layout.Column
 import com.varabyte.kobweb.compose.foundation.layout.Row
 import com.varabyte.kobweb.compose.ui.Alignment
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.modifiers.fillMaxWidth
+import com.varabyte.kobweb.compose.ui.modifiers.minHeight
+import com.varabyte.kobweb.compose.ui.modifiers.overflow
 import com.varabyte.kobweb.silk.components.text.SpanText
 import org.jetbrains.compose.web.css.px
 import org.koin.compose.koinInject
@@ -40,11 +43,15 @@ fun SatelliteListComponent(
             SpanText("${satelliteList.size} satélites encontrados")
         }
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .minHeight(0.px)
+                .overflow(overflowX = Overflow.Hidden, overflowY = Overflow.Scroll),
             verticalArrangement = Arrangement.spacedBy(10.px),
         ) {
             satelliteList.forEach { data ->
-                val isSelected = selectedSatellite?.orbitData?.noradCatId == data.orbitData.noradCatId
+                val isSelected = selectedSatellite?.omm?.noradCatId == data.omm.noradCatId
                 val isInTrackingList by remember(trackingSatellites, data) {
                     derivedStateOf { trackingSatellites.contains(data) }
                 }
