@@ -1,11 +1,17 @@
 package com.parodison.orbital.server.db.repositories
 
 import com.parodison.orbit.core.satellite.model.OrbitMeanElementsMessage
+import com.parodison.orbital.server.db.paginate
 import com.parodison.orbital.server.db.tables.OrbitMeanElementsTable
+import com.parodison.orbital.server.db.tables.SatelliteGroupsTable
+import com.parodison.shared.dto.Page
+import com.parodison.shared.dto.SatGroup
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.upsert
 
@@ -40,6 +46,27 @@ object OrbitMeanElementsRepository {
 
     fun Transaction.findAll(): List<OrbitMeanElementsMessage> =
         OrbitMeanElementsTable.selectAll().map { it.toOrbitMeanElementsMessage() }
+
+    fun Transaction.findBySearch(
+        searchText: String? = null,
+        group: SatGroup? = null,
+        page: Int = 1,
+        pageSize: Int = 100,
+    ): Page<OrbitMeanElementsMessage> {
+        val baseQuery = if (group != null) {
+            (SatelliteGroupsTable innerJoin OrbitMeanElementsTable).selectAll()
+        } else {
+            OrbitMeanElementsTable.selectAll()
+        }
+
+        val conditions = listOfNotNull(
+            group?.let { SatelliteGroupsTable.group eq it },
+            searchText?.let { OrbitMeanElementsTable.objectName like "%$it%" },
+        )
+
+        val filtered = conditions.fold(baseQuery) { query, cond -> query.andWhere { cond } }
+        return filtered.paginate(page, pageSize) { it.toOrbitMeanElementsMessage() }
+    }
 
     internal fun ResultRow.toOrbitMeanElementsMessage() = OrbitMeanElementsMessage(
         objectName = this[OrbitMeanElementsTable.objectName],

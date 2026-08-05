@@ -6,6 +6,9 @@ import io.ktor.resources.Resource
 @Resource("/satellites")
 class SatelliteResources(
     val parent: Api = Api(),
+    val searchText: String? = null,
+    val page: Int = 1,
+    val pageSize: Int = 100,
     val group: SatGroup? = null,
 ) {
     @Resource("{noradId}")

@@ -33,6 +33,7 @@ import kotlinx.coroutines.isActive
 import org.jetbrains.compose.web.css.LineStyle
 import org.jetbrains.compose.web.css.px
 import org.koin.compose.koinInject
+import org.w3c.dom.WebSocket
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -65,7 +66,8 @@ fun MapScreen() {
 
 
     Box(
-        Modifier.fillMaxSize()
+        Modifier
+            .fillMaxSize()
             .overflow(Overflow.Hidden)
             .then(if (windowSize.sizeClass == WindowSizeClass.Mobile) {
                 Modifier

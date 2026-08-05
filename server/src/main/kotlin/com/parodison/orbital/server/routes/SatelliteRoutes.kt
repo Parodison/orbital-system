@@ -2,6 +2,7 @@ package com.parodison.orbital.server.routes
 
 import com.parodison.orbital.server.db.repositories.OrbitMeanElementsRepository.findAll
 import com.parodison.orbital.server.db.repositories.OrbitMeanElementsRepository.findByNoradId
+import com.parodison.orbital.server.db.repositories.OrbitMeanElementsRepository.findBySearch
 import com.parodison.orbital.server.db.repositories.SatelliteGroupsRepository.findSatellitesByGroup
 import com.parodison.shared.resources.SatelliteResources
 import io.ktor.server.plugins.NotFoundException
@@ -12,13 +13,13 @@ import org.jetbrains.exposed.v1.jdbc.transactions.suspendTransaction
 
 fun Route.satelliteRoutes() {
     get<SatelliteResources> { resource ->
-        val group = resource.group
         val satellites = suspendTransaction {
-            if (group != null) {
-                findSatellitesByGroup(group)
-            } else {
-                findAll()
-            }
+            findBySearch(
+                resource.searchText,
+                resource.group,
+                resource.page,
+                resource.pageSize,
+            )
         }
         call.respond(satellites)
     }
