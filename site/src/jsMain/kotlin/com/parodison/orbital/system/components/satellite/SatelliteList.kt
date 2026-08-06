@@ -35,13 +35,6 @@ fun SatelliteListComponent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(10.px),
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SpanText("${satelliteList.size} satélites encontrados")
-        }
         Column(
             modifier = Modifier
                 .fillMaxWidth()

@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.lowerCase
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -61,7 +62,7 @@ object OrbitMeanElementsRepository {
 
         val conditions = listOfNotNull(
             group?.let { SatelliteGroupsTable.group eq it },
-            searchText?.let { OrbitMeanElementsTable.objectName like "%$it%" },
+            searchText?.let { OrbitMeanElementsTable.objectName.lowerCase() like "%${it.lowercase()}%" },
         )
 
         val filtered = conditions.fold(baseQuery) { query, cond -> query.andWhere { cond } }

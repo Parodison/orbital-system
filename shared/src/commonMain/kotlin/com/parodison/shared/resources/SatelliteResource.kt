@@ -4,7 +4,7 @@ import com.parodison.shared.dto.SatGroup
 import io.ktor.resources.Resource
 
 @Resource("/satellites")
-class SatelliteResources(
+class SatelliteResource(
     val parent: Api = Api(),
     val searchText: String? = null,
     val page: Int = 1,
@@ -13,7 +13,7 @@ class SatelliteResources(
 ) {
     @Resource("{noradId}")
     class NoradId(
-        val parent: SatelliteResources = SatelliteResources(),
+        val parent: SatelliteResource = SatelliteResource(),
         val noradId: Long
     )
 }

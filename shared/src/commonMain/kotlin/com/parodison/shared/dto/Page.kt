@@ -13,3 +13,11 @@ data class Page<T>(
     val hasNext: Boolean get() = currentPage < totalPages
     val hasPrevious: Boolean get() = currentPage > 1
 }
+
+fun <T, R> Page<T>.map(transform: (T) -> R): Page<R> = Page(
+    content = content.map(transform),
+    currentPage = currentPage,
+    pageSize = pageSize,
+    totalItems = totalItems,
+    totalPages = totalPages,
+)
