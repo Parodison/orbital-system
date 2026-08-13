@@ -241,16 +241,21 @@ private fun ColumnScope.ActualLocationComponent(
 ) {
     val maplibreState = rememberMapLibreState()
 
+    // Algunos elementos orbitales publicados por Celestrak vienen corruptos (p. ej. excentricidad
+    // negativa) y el propagador SGP4 tira IllegalStateException — sin este catch, un satélite con
+    // datos inválidos tumba la composición de todo el panel (y de paso, la página entera).
     val snapshot by produceState<SatelliteSnapshot?>(initialValue = null, satellite) {
         while (true) {
-            value = satellite.snapshotAt(Clock.System.now())
+            value = runCatching { satellite.snapshotAt(Clock.System.now()) }.getOrNull() ?: value
             delay(trackingDelay)
         }
     }
 
     val orbitTrack = remember(satellite) {
         val now = Clock.System.now()
-        satellite.groundTrack(from = now, to = now + satellite.periodMinutes.minutes, step = 60.seconds)
+        runCatching {
+            satellite.groundTrack(from = now, to = now + satellite.periodMinutes.minutes, step = 60.seconds)
+        }.getOrDefault(emptyList())
     }
 
     Box(
@@ -345,11 +350,13 @@ private fun ColumnScope.UpcomingPassesSection(
 ) {
     val passes = remember(satellite, observer) {
         observer?.let {
-            satellite.nextPassesFrom(
-                observer = it,
-                from = Clock.System.now(),
-                searchWindow = PASSES_SEARCH_WINDOW,
-            ).take(PASSES_SHOWN)
+            runCatching {
+                satellite.nextPassesFrom(
+                    observer = it,
+                    from = Clock.System.now(),
+                    searchWindow = PASSES_SEARCH_WINDOW,
+                ).take(PASSES_SHOWN)
+            }.getOrDefault(emptyList())
         }
     }
 

@@ -1,7 +1,9 @@
 package com.parodison.orbital.server
 
 import com.parodison.orbital.server.plugin.*
+import com.parodison.orbital.server.routes.groundStationRoutes
 import com.parodison.orbital.server.routes.satelliteRoutes
+import com.parodison.orbital.server.routes.websocketRoutes
 import com.parodison.orbital.server.service.SatelliteCatalogService
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
@@ -19,6 +21,7 @@ fun Application.module() {
     configureResources()
     configureSerialization()
     configureCORS()
+    configureWebsockets()
 
     launch {
         val satelliteCatalogService = SatelliteCatalogService()
@@ -30,5 +33,9 @@ fun Application.module() {
 
     routing {
         satelliteRoutes()
+        groundStationRoutes()
+        route("/ws") {
+            websocketRoutes()
+        }
     }
 }

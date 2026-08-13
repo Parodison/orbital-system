@@ -68,7 +68,6 @@ fun HomePage() {
             satelliteController.updateSelectedSatellite(it.toSatellite())
         },
     )
-    val isMobile = LocalWindowSize.current.sizeClass == WindowSizeClass.Mobile
 
     CompositionLocalProvider(LocalSatelliteScreenActions provides satelliteScreenActions) {
         Row(

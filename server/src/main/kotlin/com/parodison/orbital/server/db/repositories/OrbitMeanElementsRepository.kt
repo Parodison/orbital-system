@@ -45,8 +45,8 @@ object OrbitMeanElementsRepository {
             .singleOrNull()
             ?.toOrbitMeanElementsMessage()
 
-    fun Transaction.findAll(): List<OrbitMeanElementsMessage> =
-        OrbitMeanElementsTable.selectAll().map { it.toOrbitMeanElementsMessage() }
+    fun Transaction.findAll(): Page<OrbitMeanElementsMessage> =
+        OrbitMeanElementsTable.selectAll().paginate { it.toOrbitMeanElementsMessage() }
 
     fun Transaction.findBySearch(
         searchText: String? = null,

@@ -1,7 +1,6 @@
-package com.parodison.orbital.system.pages.mapa
+package com.parodison.orbital.system.pages.map
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +32,6 @@ import kotlinx.coroutines.isActive
 import org.jetbrains.compose.web.css.LineStyle
 import org.jetbrains.compose.web.css.px
 import org.koin.compose.koinInject
-import org.w3c.dom.WebSocket
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes

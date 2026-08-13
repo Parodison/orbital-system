@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.server.websockets)
     implementation(libs.orbit.core)
 
     implementation(libs.postgresql)

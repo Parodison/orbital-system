@@ -34,6 +34,12 @@ import org.jetbrains.compose.web.css.*
 import org.koin.compose.koinInject
 import kotlin.time.Clock
 
+// Algunos elementos orbitales publicados por Celestrak vienen corruptos (p. ej. excentricidad
+// negativa) y el propagador SGP4 tira IllegalStateException al calcular la posición — sin este
+// catch, un solo satélite con datos inválidos tumba la composición de toda la lista.
+private fun Satellite.altitudeLabel(): String =
+    runCatching { "${altitudeAt(Clock.System.now()).roundTo(2)} km" }.getOrDefault("—")
+
 @Composable
 fun SatelliteCard(
     modifier: Modifier = Modifier,
@@ -140,7 +146,7 @@ private fun SatelliteCardDesktopContent(
                     verticalArrangement = columnArrangement,
                 ) {
                     CardFieldLabel("ALTITUD")
-                    CardFieldValue("${data.altitudeAt(Clock.System.now()).roundTo(2)} km")
+                    CardFieldValue(data.altitudeLabel())
                 }
             }
         }

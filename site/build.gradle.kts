@@ -65,6 +65,7 @@ kotlin {
             implementation(project(":shared"))
             implementation(libs.ktor.resources)
             implementation(libs.ktor.client.resources)
+            implementation(libs.ktor.client.websockets)
         }
 
         jsMain.dependencies {

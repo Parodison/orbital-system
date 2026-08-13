@@ -86,7 +86,12 @@ val routeItems = listOf<RouteItem>(
     RouteItem(
         label = "Mapa",
         icon = "map",
-        route = "/mapa/"
+        route = "/map/"
+    ),
+    RouteItem(
+        label = "Estaciones terrenas",
+        icon = "settings_input_antenna",
+        route = "/groundstations/"
     )
 
 )
@@ -261,7 +266,7 @@ private fun ColumnScope.DesktopLayout(
         Sidebar(
             context,
             Modifier
-                .width(350.px)
+                .width(300.px)
                 .fillMaxHeight()
                 .backgroundColor(AppColors.DarkBluePrimary)
                 .borderTop(2.px, LineStyle.Solid, AppColors.OutlineGray)
