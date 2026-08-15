@@ -52,6 +52,7 @@ import com.varabyte.kobweb.silk.components.icons.mdi.MdiSatelliteAlt
 import com.varabyte.kobweb.silk.components.text.SpanText
 import kotlinx.coroutines.delay
 import org.jetbrains.compose.web.css.LineStyle
+import org.jetbrains.compose.web.css.percent
 import org.jetbrains.compose.web.css.px
 import org.koin.compose.koinInject
 import kotlin.time.Clock
@@ -84,6 +85,12 @@ fun GroundStationResume(station: GroundStation, onCloseRequested: () -> Unit) {
         }
         if (station.status.isActive) {
             StationLocationCard(station)
+            StatusDetailSection(station.status)
+            TrackingSection(
+                station = station,
+                onTrackRequested = { showTrackDialog = true },
+                onStopRequested = { controller.stopTracking(station.id) },
+            )
         }
     }
 
@@ -188,5 +195,117 @@ fun StationLocationCard(station: GroundStation, modifier: Modifier = Modifier) {
             label = "Altitud", value = coordinates.altitudeKm * 1000, decimals = 0, suffix = " m",
             onCommit = { meters -> controller.updateStationLocation(station.id, coordinates.copy(altitudeKm = meters / 1000)) },
         )
+    }
+}
+
+@Composable
+private fun StatusDetailSection(status: GroundStationStatus) {
+    when (status) {
+        is GroundStationStatus.Connected.Error -> {
+            Box(
+                Modifier.fillMaxWidth()
+                    .padding(10.px)
+                    .borderRadius(8.px)
+                    .backgroundColor(AppColors.PrimaryRed.copyf(alpha = 0.12f))
+                    .border(1.px, LineStyle.Solid, AppColors.PrimaryRed.copyf(alpha = 0.4f))
+            ) {
+                SpanText(status.message, modifier = Modifier.fontSize(13.px).color(Colors.White))
+            }
+        }
+        is GroundStationStatus.Connected.PreparingForPass -> {
+            Row(Modifier.fillMaxWidth()) {
+                MetaDataItem(name = "PRÓXIMA PASADA", value = status.omm.objectName)
+                MetaDataItem(name = "AZIMUT AOS", value = "${status.aosAzimuth.roundTo(1)}°")
+            }
+        }
+        is GroundStationStatus.Connected.Tracking -> {
+            TrackedSatelliteCard(status)
+        }
+        else -> {}
+    }
+}
+
+private data class TrackedSatelliteSnapshot(val speedKmPerSec: Double)
+
+@Composable
+private fun TrackedSatelliteCard(status: GroundStationStatus.Connected.Tracking) {
+    val satellite = remember(status.omm) { status.omm.toSatellite() }
+
+    val snapshot by produceState<TrackedSatelliteSnapshot?>(initialValue = null, satellite) {
+        while (true) {
+            value = runCatching { TrackedSatelliteSnapshot(speedKmPerSec = satellite.speedAt(Clock.System.now())) }
+                .getOrNull() ?: value
+            delay(1.seconds)
+        }
+    }
+
+    Box(
+        Modifier.fillMaxWidth()
+            .border(1.px, LineStyle.Solid, AppColors.OutlineGray)
+            .borderRadius(10.px)
+            .padding(12.px)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(14.px),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MdiSatelliteAlt(modifier = Modifier.fontSize(34.px).color(Colors.LightGray))
+            Column(verticalArrangement = Arrangement.spacedBy(8.px)) {
+                SpanText(
+                    status.omm.objectName,
+                    modifier = Modifier.fontWeight(600).fontSize(14.px).color(Colors.White),
+                )
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    MetaDataItem(
+                        modifier = Modifier.weight(1f),
+                        name = "VELOCIDAD",
+                        value = snapshot?.let { "${it.speedKmPerSec.roundTo(2)} km/s" } ?: "—",
+                    )
+                    MetaDataItem(modifier = Modifier.weight(1f), name = "AZIMUT", value = "${status.azimuth.roundTo(1)}°")
+                    MetaDataItem(modifier = Modifier.weight(1f), name = "ELEVACIÓN", value = "${status.elevation.roundTo(1)}°")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TrackingSection(
+    station: GroundStation,
+    onTrackRequested: () -> Unit,
+    onStopRequested: () -> Unit,
+) {
+    val hasCoordinates = station.coordinates != null
+    val isEngaged = station.status is GroundStationStatus.Connected.Tracking ||
+        station.status is GroundStationStatus.Connected.PreparingForPass
+
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.px)) {
+        if (isEngaged) {
+            MdFilledButton(
+                attrs = Modifier
+                    .backgroundColor(AppColors.PrimaryBlue)
+                    .borderRadius(8.px)
+                    .fontFamily("Inter")
+                    .onClick { onStopRequested() }
+                    .toAttrs()
+            ) {
+                SpanText("Detener rastreo")
+            }
+        } else {
+            MdFilledButton(
+                attrs = Modifier
+                    .backgroundColor(AppColors.PrimaryBlue)
+                    .borderRadius(8.px)
+                    .fontFamily("Inter")
+                    .thenIf(!hasCoordinates) { Modifier.opacity(0.5f).pointerEvents(PointerEvents.None) }
+                    .onClick { if (hasCoordinates) onTrackRequested() }
+                    .toAttrs()
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.px)) {
+                    MdiMyLocation()
+                    SpanText("Rastrear satélite")
+                }
+            }
+        }
     }
 }
