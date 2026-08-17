@@ -48,6 +48,16 @@ object OrbitMeanElementsRepository {
     fun Transaction.findAll(): Page<OrbitMeanElementsMessage> =
         OrbitMeanElementsTable.selectAll().paginate { it.toOrbitMeanElementsMessage() }
 
+    fun Transaction.findAllByGroup(group: SatGroup? = null): List<OrbitMeanElementsMessage> {
+        val query = if (group != null) {
+            (SatelliteGroupsTable innerJoin OrbitMeanElementsTable).selectAll()
+                .andWhere { SatelliteGroupsTable.group eq group }
+        } else {
+            OrbitMeanElementsTable.selectAll()
+        }
+        return query.map { it.toOrbitMeanElementsMessage() }
+    }
+
     fun Transaction.findBySearch(
         searchText: String? = null,
         group: SatGroup? = null,
