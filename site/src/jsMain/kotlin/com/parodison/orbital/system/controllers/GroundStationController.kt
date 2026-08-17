@@ -5,6 +5,9 @@ import com.parodison.orbit.core.groundstation.dto.GroundStationStatus
 import com.parodison.orbit.core.protocol.WebsocketPayload
 import com.parodison.orbit.core.satellite.ObserverCoordinates
 import com.parodison.orbit.core.satellite.model.OrbitMeanElementsMessage
+import com.parodison.orbital.system.components.groundstation.MockTestGroundStationId
+import com.parodison.orbital.system.components.groundstation.mockGroundStation
+import com.parodison.orbital.system.components.groundstation.mockGroundStationStatuses
 import com.parodison.shared.dto.Page
 import com.parodison.shared.resources.GroundStationResource
 import io.ktor.client.HttpClient
@@ -39,6 +42,8 @@ class GroundStationController(
     private val _selectedStation = MutableStateFlow<GroundStation?>(null)
     val selectedStation: StateFlow<GroundStation?> = _selectedStation
 
+    private val mockTestStatuses = mockGroundStationStatuses()
+
     init {
         loadGroundStationList()
         handleIncomingMessages()
@@ -59,6 +64,7 @@ class GroundStationController(
                     val data = response.body<Page<GroundStation>>()
                     _groundStationListState.value = GroundStationListState.Success(data)
                     requestAllStationsData()
+                    appendMockTestStation()
                 } else {
                     _groundStationListState.value = GroundStationListState.Error(
                         "Ha ocurrido un error con status code ${response.status.value}"
@@ -144,6 +150,26 @@ class GroundStationController(
                 _selectedStation.value = selected.copy(status = status)
             }
         }
+    }
+
+    /** Agrega la "Estación prueba" mock a la lista, junto con lo que devuelve la API. */
+    private fun appendMockTestStation() {
+        val current = _groundStationListState.value
+        if (current !is GroundStationListState.Success) return
+        if (current.data.content.any { it.id == MockTestGroundStationId }) return
+        _groundStationListState.value = GroundStationListState.Success(
+            current.data.copy(content = current.data.content + mockGroundStation(status = mockTestStatuses.first()))
+        )
+    }
+
+    /** Alterna el status de la "Estación prueba" mock entre los distintos [GroundStationStatus] de ejemplo. */
+    fun cycleMockTestStationStatus() {
+        val current = _groundStationListState.value
+        if (current !is GroundStationListState.Success) return
+        val mockStation = current.data.content.firstOrNull { it.id == MockTestGroundStationId } ?: return
+        val currentIndex = mockTestStatuses.indexOf(mockStation.status).coerceAtLeast(0)
+        val nextStatus = mockTestStatuses[(currentIndex + 1) % mockTestStatuses.size]
+        updateStationStatus(MockTestGroundStationId, nextStatus)
     }
 
     fun selectStation(station: GroundStation) {
