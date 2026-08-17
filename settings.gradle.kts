@@ -10,6 +10,7 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
+        mavenLocal()
         mavenCentral()
         google()
     }
@@ -38,4 +39,4 @@ plugins {
 
 include(":site")
 include(":server")
-include(":libs:sgp4")
+include(":shared")

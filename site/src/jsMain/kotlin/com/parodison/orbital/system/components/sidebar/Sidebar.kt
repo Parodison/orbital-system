@@ -1,6 +1,7 @@
 package com.parodison.orbital.system.components.sidebar
 
 import androidx.compose.runtime.Composable
+import com.parodison.orbital.system.components.layouts.routeItems
 import com.parodison.orbital.system.core.AppColors
 import com.varabyte.kobweb.compose.css.Overflow
 import com.varabyte.kobweb.compose.foundation.layout.Arrangement
@@ -17,34 +18,14 @@ import com.varabyte.kobweb.silk.components.icons.mdi.MdIcon
 import com.varabyte.kobweb.silk.components.layout.Surface
 import org.jetbrains.compose.web.css.px
 
-data class RouteItem(
-    val label: String,
-    val icon: String,
-    val route: String
-)
-
-val routeItems = listOf<RouteItem>(
-    RouteItem(
-        label = "Satélites",
-        icon = "satellite_alt",
-        route = "/"
-    ),
-    RouteItem(
-        label = "Mapa",
-        icon = "map",
-        route = "/mapa"
-    )
-
-)
-
 
 @Composable
 fun RowScope.Sidebar(context: PageContext, modifier: Modifier = Modifier) {
-
+    println(context.route.path)
     Surface(
         modifier = modifier
             .backgroundColor(AppColors.DarkBluePrimary)
-            .overflow(Overflow.Hidden)
+            .overflow(Overflow.Scroll)
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(10.px),
@@ -52,6 +33,7 @@ fun RowScope.Sidebar(context: PageContext, modifier: Modifier = Modifier) {
         ) {
 
             routeItems.forEach { item ->
+                println("Estamos en la ruta del item: ${item.label}?: ${context.route.path == item.route}")
                 SidebarElement(
                     label = item.label,
                     icon = {

@@ -33,6 +33,9 @@ fun BasicInput(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String? = null,
+    onFocus: () -> Unit = {},
+    onBlur: () -> Unit = {},
+    onEnter: () -> Unit = {},
     onRef: (HTMLInputElement) -> Unit = {},
 ) {
     Input(
@@ -40,17 +43,16 @@ fun BasicInput(
         attrs = BasicInputStyle.toModifier()
             .then(modifier)
             .toAttrs {
-                ref { element -> 
+                ref { element ->
                     onRef(element)
-                    onDispose {  }
+                    onDispose { }
                 }
                 value(value)
-                onInput { event ->
-                    onValueChange(event.value)
-                }
-                placeholder?.let {
-                    placeholder(it)
-                }
+                onInput { event -> onValueChange(event.value) }
+                onFocus { onFocus() }
+                onBlur { onBlur() }
+                onKeyDown { event -> if (event.key == "Enter") onEnter() }
+                placeholder?.let { placeholder(it) }
             }
     )
 }

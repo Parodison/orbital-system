@@ -1,5 +1,7 @@
 import com.varabyte.kobweb.gradle.application.util.configAsKobwebApplication
 import kotlinx.html.link
+import kotlinx.html.style
+import kotlinx.html.unsafe
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -7,6 +9,7 @@ plugins {
     alias(libs.plugins.kobweb.application)
     alias(libs.plugins.kobwebx.markdown)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 group = "com.parodison.orbital.system"
@@ -22,6 +25,10 @@ kobweb {
                 link(href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap", rel = "stylesheet")
                 link {
                     href = "https://unpkg.com/maplibre-gl@5.0.1/dist/maplibre-gl.css"
+                    rel = "stylesheet"
+                }
+                link {
+                    href = "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css"
                     rel = "stylesheet"
                 }
             }
@@ -54,7 +61,11 @@ kotlin {
             implementation(project.dependencies.platform(libs.koin.bom))
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
-            implementation(project(":libs:sgp4"))
+            implementation(libs.orbit.core)
+            implementation(project(":shared"))
+            implementation(libs.ktor.resources)
+            implementation(libs.ktor.client.resources)
+            implementation(libs.ktor.client.websockets)
         }
 
         jsMain.dependencies {
@@ -71,7 +82,9 @@ kotlin {
             implementation(libs.silk.icons.fa)
             implementation(libs.kobwebx.serialization.kotlinx)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.compose.html.material3)
             implementation(npm("maplibre-gl", "5.24.0"))
+            implementation(npm("bootstrap-icons", "1.13.1"))
         }
 
         // Uncomment the following if you pass `includeServer = true` into the `configAsKobwebApplication` call.
